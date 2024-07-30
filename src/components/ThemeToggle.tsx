@@ -37,6 +37,7 @@ export default function ThemeToggle({ theme }: ThemeToggleProps) {
 
   return (
     <Toggle
+      data-testid="theme-toggle"
       size="lg"
       isActive={isActive}
       setIsActive={setIsActive}
