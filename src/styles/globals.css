@@ -10,12 +10,23 @@
     @apply min-h-screen w-full;
   }
 
+  html {
+    @apply font-pretendard;
+  }
+
   body {
     @apply overflow-x-hidden bg-light-primary text-light dark:bg-dark-primary dark:text-dark;
   }
 }
 
 @layer components {
+  .bg-underline {
+    @apply bg-gradient-to-r bg-[length:0%_0.1rem] bg-[0_100%] bg-no-repeat hover:bg-[length:100%_0.1rem];
+
+    &-active {
+      @apply bg-underline bg-[length:100%_0.1rem];
+    }
+  }
 }
 
 @layer utilities {
