@@ -93,6 +93,11 @@ const config: Config = {
   moduleNameMapper: {
     '^@public/(.*)$': '<rootDir>/public/$1',
     '^@assets/(.*)$': '<rootDir>/src/assets/$1',
+    '^@components/(.*)$': '<rootDir>/src/components/$1',
+    '^@data/(.*)$': '<rootDir>/src/data/$1',
+    '^@layouts/(.*)$': '<rootDir>/src/layouts/$1',
+    '^@lib/(.*)$': '<rootDir>/src/lib/$1',
+    '^@types/(.*)$': '<rootDir>/src/types/$1',
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
