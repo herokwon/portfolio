@@ -23,7 +23,7 @@ export default function NavBar({ theme }: NavBarProps) {
             <Logo />
           </Link>
         </div>
-        <NavItems className="flex-[2] gap-x-4 max-md:hidden" />
+        <NavItems className="h-full flex-[2] gap-x-4 max-md:hidden" />
         <div className="flex h-full flex-1 items-center justify-end gap-x-2">
           <ThemeToggle theme={theme} />
         </div>

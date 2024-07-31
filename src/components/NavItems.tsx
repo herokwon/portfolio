@@ -12,7 +12,7 @@ export default function NavItems({ ...props }: NavItemsProps) {
 
   return (
     <nav
-      className={`flex h-full w-full items-center justify-center ${props.className ?? ''}`}
+      className={`flex items-center justify-center ${props.className ?? ''}`}
     >
       {navItems.map(navItem => (
         <Link

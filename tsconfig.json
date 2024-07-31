@@ -22,6 +22,7 @@
       "@public/*": ["public/*"],
       "@assets/*": ["src/assets/*"],
       "@styles/*": ["src/styles/*"],
+      "@stores": ["src/stores"],
       "@components": ["src/components"],
       "@components/*": ["src/components/*"],
       "@data": ["src/data"],
