@@ -2,7 +2,7 @@ import LocalFont from 'next/font/local';
 
 import { getTheme } from '@lib';
 
-import { NavBar } from '@layouts';
+import { NavBar, SideBar } from '@layouts';
 
 import '../styles/globals.css';
 
@@ -25,6 +25,7 @@ export default async function RootLayout({
       <head></head>
       <body>
         <NavBar theme={theme} />
+        <SideBar />
         {children}
       </body>
     </html>

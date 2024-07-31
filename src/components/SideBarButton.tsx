@@ -1,7 +1,8 @@
 'use client';
 
 import { TextButton } from 'herokwon-ds';
-import { useState } from 'react';
+
+import { useSideBar } from '@stores';
 
 type SideBarButtonProps = Pick<
   React.ComponentPropsWithoutRef<typeof TextButton>,
@@ -9,10 +10,11 @@ type SideBarButtonProps = Pick<
 >;
 
 export default function SideBarButton({ variant }: SideBarButtonProps) {
-  const [isActive, setIsActive] = useState<boolean>(false);
+  const { isActive, setIsActive } = useSideBar();
 
   return (
     <TextButton
+      data-testid="sidebar-button"
       label={
         <div className="flex h-15 w-20 flex-col justify-between *:h-3 *:rounded-ms *:bg-black *:transition-all dark:*:bg-white">
           <span
@@ -30,7 +32,7 @@ export default function SideBarButton({ variant }: SideBarButtonProps) {
       }
       variant={variant}
       spacing="compact"
-      onClick={() => setIsActive(prev => !prev)}
+      onClick={() => setIsActive(!isActive)}
       className="aspect-square w-fit"
     />
   );
