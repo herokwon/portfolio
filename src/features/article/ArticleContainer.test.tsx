@@ -18,26 +18,7 @@ const metadata: ArticleMetadata = {
   thumbnail: null,
 };
 
-jest.mock('next/headers', () => ({
-  cookies: () => ({
-    get: jest.fn(),
-    set: jest.fn(),
-  }),
-}));
-
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn().mockReturnValue(''),
-  useRouter: () => ({
-    route: '/',
-    pathname: '',
-    query: {},
-    asPath: '',
-    push: jest.fn(),
-    replace: jest.fn(),
-  }),
-}));
-
-describe('ArticleContainer - Default', () => {
+describe('Article Container - Default', () => {
   it('should render the thumbnail image', async () => {
     const thumbnailMetadata = !metadata.thumbnail
       ? null
@@ -70,7 +51,7 @@ describe('ArticleContainer - Default', () => {
   });
 });
 
-describe('ArticleContainer - Secondary', () => {
+describe('Article Container - Secondary', () => {
   it('should render the article metadata', () => {
     render(<ArticleInfo variant="secondary" {...metadata} />);
 

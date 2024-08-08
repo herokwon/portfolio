@@ -5,26 +5,7 @@ import { navItems } from '@data';
 
 import NavBar from './NavBar';
 
-jest.mock('next/headers', () => ({
-  cookies: () => ({
-    get: jest.fn(),
-    set: jest.fn(),
-  }),
-}));
-
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn().mockReturnValue(''),
-  useRouter: () => ({
-    route: '/',
-    pathname: '',
-    query: {},
-    asPath: '',
-    push: jest.fn(),
-    replace: jest.fn(),
-  }),
-}));
-
-describe('NavBar', () => {
+describe('Nav Bar', () => {
   it('should render the logo with a link to home', () => {
     render(<NavBar theme="light" />);
 
