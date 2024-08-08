@@ -8,7 +8,7 @@ export default function BottomBar() {
 
   return (
     <footer className="my-auto h-200 w-full space-y-2 md:space-y-4">
-      <Logo className="mx-auto h-88 opacity-off" />
+      <Logo className="mx-auto !h-88 opacity-off" />
       <SocialItems />
       <p
         className="flex w-full flex-wrap items-center justify-center gap-x-1 text-sm"
