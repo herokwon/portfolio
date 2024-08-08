@@ -6,26 +6,7 @@ import { navItems } from '@data';
 import NavBar from './NavBar';
 import SideBar from './SideBar';
 
-jest.mock('next/headers', () => ({
-  cookies: () => ({
-    get: jest.fn(),
-    set: jest.fn(),
-  }),
-}));
-
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn().mockReturnValue(''),
-  useRouter: () => ({
-    route: '/',
-    pathname: '',
-    query: {},
-    asPath: '',
-    push: jest.fn(),
-    replace: jest.fn(),
-  }),
-}));
-
-describe('SideBar', () => {
+describe('Side Bar', () => {
   it('should active sidebar', async () => {
     render(<NavBar theme="light" />);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Toggle } from 'herokwon-ds';
+import { Toggle, Tooltip } from 'herokwon-ds';
 import { useEffect, useState } from 'react';
 import { FiMoon, FiSun } from 'react-icons/fi';
 
@@ -36,13 +36,18 @@ export default function ThemeToggle({ theme }: ThemeToggleProps) {
   }, [theme]);
 
   return (
-    <Toggle
-      data-testid="theme-toggle"
-      size="lg"
-      isActive={isActive}
-      setIsActive={setIsActive}
-      activeIcon={FiMoon}
-      inactiveIcon={FiSun}
-    />
+    <Tooltip
+      content={`화면 스타일 [${isActive ? '다크' : '라이트'} 모드]`}
+      position="bottom-right"
+    >
+      <Toggle
+        data-testid="theme-toggle"
+        size="lg"
+        isActive={isActive}
+        setIsActive={setIsActive}
+        activeIcon={FiMoon}
+        inactiveIcon={FiSun}
+      />
+    </Tooltip>
   );
 }
