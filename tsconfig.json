@@ -21,8 +21,6 @@
     "paths": {
       "@public/*": ["public/*"],
       "@assets/*": ["src/assets/*"],
-      "@styles/*": ["src/styles/*"],
-      "@stores": ["src/stores"],
       "@components": ["src/components"],
       "@components/*": ["src/components/*"],
       "@data": ["src/data"],
@@ -31,6 +29,8 @@
       "@layouts/*": ["src/layouts/*"],
       "@lib": ["src/lib"],
       "@lib/*": ["src/lib/*"],
+      "@stores": ["src/stores"],
+      "@styles/*": ["src/styles/*"],
       "@types": ["src/types"],
       "@types/*": ["src/types/*"]
     }
