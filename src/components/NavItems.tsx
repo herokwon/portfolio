@@ -18,10 +18,10 @@ export default function NavItems({ ...props }: NavItemsProps) {
         <Link
           key={navItem.path}
           href={navItem.path}
-          className={`from-black to-black px-0.5 font-semibold transition-[background-size,_opacity] dark:from-white dark:to-white ${
+          className={`from-black to-black px-0.5 font-semibold transition-[background-size,_opacity] bg-underline-[2px] dark:from-white dark:to-white ${
             navItem.path === pathname
-              ? 'bg-underline-active opacity-bold'
-              : 'bg-underline opacity-off hover:opacity-bold'
+              ? 'opacity-bold active'
+              : 'opacity-off hover:opacity-bold'
           }`}
         >
           {navItem.heading}
