@@ -13,6 +13,8 @@
     "^@data/(.*)$",
     "@layouts",
     "^@layouts/(.*)$",
+    "@features",
+    "^@features/(.*)$",
     "@components",
     "^@components/(.*)$",
     "^[./]"
