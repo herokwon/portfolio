@@ -4,6 +4,8 @@ import { getTheme } from '@lib';
 
 import { BottomBar, NavBar, SideBar } from '@layouts';
 
+import ScrollToTopButton from '@components/ScrollToTopButton';
+
 import '../styles/globals.css';
 
 const pretendard = LocalFont({
@@ -26,7 +28,8 @@ export default async function RootLayout({
       <body>
         <NavBar theme={theme} />
         <SideBar />
-        {children}
+        <main className="h-1000">{children}</main>
+        <ScrollToTopButton />
         <BottomBar />
       </body>
     </html>
