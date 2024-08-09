@@ -10,7 +10,7 @@ interface NavBarProps {
 
 export default function NavBar({ theme }: NavBarProps) {
   return (
-    <header className="sticky left-0 right-0 top-0 z-50 flex h-48 w-full justify-center px-4">
+    <header className="sticky left-0 right-0 top-0 z-50 flex h-48 w-full justify-center bg-light-primary/normal px-4 backdrop-blur-lg dark:bg-dark-primary/normal">
       <section className="flex h-full w-full">
         <div className="flex flex-1 items-center justify-start md:hidden">
           <SideBarButton variant="secondary" />
