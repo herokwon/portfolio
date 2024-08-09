@@ -1,5 +1,28 @@
 {
   "singleQuote": true,
   "arrowParens": "avoid",
-  "plugins": ["prettier-plugin-tailwindcss"]
+  "importOrder": [
+    "^@public/(.*)$",
+    "^@assets/(.*)$",
+    "@types",
+    "^@types/(.*)$",
+    "@stores",
+    "@lib",
+    "^@lib/(.*)$",
+    "@data",
+    "^@data/(.*)$",
+    "@layouts",
+    "^@layouts/(.*)$",
+    "@features",
+    "^@features/(.*)$",
+    "@components",
+    "^@components/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ]
 }

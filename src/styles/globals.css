@@ -10,13 +10,15 @@
     @apply min-h-screen w-full;
   }
 
+  html {
+    @apply font-pretendard;
+  }
+
   body {
     @apply overflow-x-hidden bg-light-primary text-light dark:bg-dark-primary dark:text-dark;
+
+    &:has(.sidebar-active) {
+      @apply overflow-y-hidden;
+    }
   }
-}
-
-@layer components {
-}
-
-@layer utilities {
 }

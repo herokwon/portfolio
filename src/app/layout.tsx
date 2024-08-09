@@ -1,5 +1,11 @@
 import LocalFont from 'next/font/local';
 
+import { getTheme } from '@lib';
+
+import { BottomBar, NavBar, SideBar } from '@layouts';
+
+import ScrollToTopButton from '@components/ScrollToTopButton';
+
 import '../styles/globals.css';
 
 const pretendard = LocalFont({
@@ -9,15 +15,23 @@ const pretendard = LocalFont({
   variable: '--font-pretendard',
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const theme = await getTheme();
+
   return (
-    <html lang="ko" className={`${pretendard.variable}`}>
+    <html lang="ko" className={`${pretendard.variable} ${theme ?? 'light'}`}>
       <head></head>
-      <body>{children}</body>
+      <body>
+        <NavBar theme={theme} />
+        <SideBar />
+        <main className="min-h-[calc(100vh-48px-200px)]">{children}</main>
+        <ScrollToTopButton />
+        <BottomBar />
+      </body>
     </html>
   );
 }
