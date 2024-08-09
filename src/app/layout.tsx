@@ -28,7 +28,7 @@ export default async function RootLayout({
       <body>
         <NavBar theme={theme} />
         <SideBar />
-        <main className="h-1000">{children}</main>
+        <main className="min-h-[calc(100vh-48px-200px)]">{children}</main>
         <ScrollToTopButton />
         <BottomBar />
       </body>

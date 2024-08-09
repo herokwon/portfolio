@@ -7,7 +7,7 @@ export default function BottomBar() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="my-auto h-200 w-full space-y-2 md:space-y-4">
+    <footer className="my-auto h-200 w-full space-y-4">
       <Logo className="mx-auto !h-88 opacity-off" />
       <SocialItems />
       <p
