@@ -22,7 +22,7 @@ export default function SideBar() {
   return (
     <Backdrop isActive={isActive} onClick={() => setIsActive(false)}>
       <aside
-        className={`flex min-h-screen w-300 flex-col gap-y-8 px-4 transition-opacity ${isActive ? '' : 'pointer-events-none opacity-0'}`}
+        className={`flex min-h-screen max-w-[300px] flex-col gap-y-8 px-4 transition-opacity ${isActive ? 'sidebar-active' : 'pointer-events-none opacity-0'}`}
       >
         <div className="flex h-48 w-full items-center justify-start">
           <SideBarButton />
