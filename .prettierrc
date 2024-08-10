@@ -9,6 +9,8 @@
     "@stores",
     "@lib",
     "^@lib/(.*)$",
+    "@utils",
+    "^@utils/(.*)$",
     "@data",
     "^@data/(.*)$",
     "@layouts",
