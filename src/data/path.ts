@@ -22,7 +22,7 @@ export const navItems: NavItem[] = [
     const category = value as keyof typeof ARTICLE_CATEGORIES;
 
     return {
-      path: `/posts/${category}`,
+      path: `/${category}`,
       heading: ARTICLE_CATEGORIES[category],
     };
   }),
