@@ -25,6 +25,8 @@
       "@components/*": ["src/components/*"],
       "@data": ["src/data"],
       "@data/*": ["src/data/*"],
+      "@features": ["src/features"],
+      "@features/*": ["src/features/*"],
       "@layouts": ["src/layouts"],
       "@layouts/*": ["src/layouts/*"],
       "@lib": ["src/lib"],

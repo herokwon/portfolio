@@ -21,23 +21,25 @@ export interface ArticleMetadata {
 export type ArticleCategory =
   (typeof ARTICLE_CATEGORIES)[keyof typeof ARTICLE_CATEGORIES];
 
-interface NotionApiResponse {
+export interface NotionApiResponse {
   hasMore: boolean;
   nextCursor: string | null;
 }
-type NotionApiReturnType<Props> =
+type NotionApiReturnType<Props = {}> =
   | Props
   | {
       error: string;
       status?: number;
     };
-
+export type GetCursorsReturnType = NotionApiReturnType<{
+  result: Pick<CursorResponse, 'data'>;
+}>;
 export type GetPagesReturnType = NotionApiReturnType<{
   result: Pick<PageResponse, 'data' | 'nextCursor'>;
 }>;
 export type GetBlocksReturnType = NotionApiReturnType<{
-  result: Pick<BlocksResponse, 'data'> &
-    Partial<Pick<BlocksResponse, 'nextCursor'>>;
+  result: Pick<BlockResponse, 'data'> &
+    Partial<Pick<BlockResponse, 'nextCursor'>>;
 }>;
 export type GetBlockReturnType<T extends BlockObjectResponse> =
   NotionApiReturnType<{
@@ -46,19 +48,41 @@ export type GetBlockReturnType<T extends BlockObjectResponse> =
     };
   }>;
 export type GetTagsReturnType = NotionApiReturnType<{
-  result: Pick<TagsResponse, 'data'>;
+  result: Pick<TagResponse, 'data'>;
 }>;
 export type GetSummaryReturnType = NotionApiReturnType<{
   result: Pick<SummaryResponse, 'data'>;
 }>;
+
+export class CursorResponse {
+  private _data: { nextCursor: string | null }[] = [{ nextCursor: null }];
+  private _hasMore: boolean = false;
+
+  constructor(data?: typeof this._data, hasMore?: typeof this._hasMore) {
+    this._data = data || [];
+    this._hasMore = hasMore || false;
+  }
+
+  get data() {
+    return this._data;
+  }
+  addData({ nextCursor }: (typeof this._data)[0]) {
+    this._hasMore = !!nextCursor && nextCursor.length > 0;
+    this._data = [...this._data, { nextCursor }];
+  }
+
+  get hasMore() {
+    return this._hasMore;
+  }
+}
 export class PageResponse implements NotionApiResponse {
   private _data: PageObjectResponse[] = [];
   private _nextCursor: string | null = null;
   private _hasMore: boolean = false;
 
   constructor(data?: PageObjectResponse[], nextCursor?: string | null) {
-    this._data = data ?? [];
-    this._nextCursor = nextCursor ?? null;
+    this._data = data || [];
+    this._nextCursor = nextCursor || null;
     this._hasMore = !!nextCursor && nextCursor.length > 0;
   }
 
@@ -81,22 +105,22 @@ export class PageResponse implements NotionApiResponse {
     return this._hasMore;
   }
 }
-export class BlocksResponse implements NotionApiResponse {
+export class BlockResponse implements NotionApiResponse {
   private _data: BlockObjectResponse[] = [];
   private _nextCursor: string | null = null;
   private _hasMore: boolean = false;
 
   constructor(data?: BlockObjectResponse[], nextCursor?: string | null) {
-    this._data = data ?? [];
-    this._nextCursor = nextCursor ?? null;
+    this._data = data || [];
+    this._nextCursor = nextCursor || null;
     this._hasMore = !!nextCursor && nextCursor.length > 0;
   }
 
   get data() {
     return this._data;
   }
-  setData(data: BlockObjectResponse[]) {
-    this._data = data;
+  addData(data: BlockObjectResponse[]) {
+    this._data = [...this._data, ...data];
   }
 
   get nextCursor() {
@@ -111,22 +135,22 @@ export class BlocksResponse implements NotionApiResponse {
     return this._hasMore;
   }
 }
-export class TagsResponse implements NotionApiResponse {
+export class TagResponse implements NotionApiResponse {
   private _data: string[] = [];
   private _nextCursor: string | null = null;
   private _hasMore: boolean = false;
 
   constructor(data?: string[], nextCursor?: string | null) {
-    this._data = data ?? [];
-    this._nextCursor = nextCursor ?? null;
+    this._data = data || [];
+    this._nextCursor = nextCursor || null;
     this._hasMore = !!nextCursor && nextCursor.length > 0;
   }
 
   get data() {
     return this._data;
   }
-  setData(data: string[]) {
-    this._data = data;
+  addData(data: string[]) {
+    this._data = [...this._data, ...data];
   }
 
   get nextCursor() {
@@ -146,7 +170,11 @@ export class SummaryResponse implements NotionApiResponse {
   private _nextCursor: string | null = null;
   private _hasMore: boolean = false;
 
-  constructor() {}
+  constructor(data?: string, nextCursor?: string | null) {
+    this._data = data || '';
+    this._nextCursor = nextCursor || null;
+    this._hasMore = !!nextCursor && nextCursor.length > 0;
+  }
 
   get data() {
     return this._data;
