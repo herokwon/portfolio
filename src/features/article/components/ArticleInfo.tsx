@@ -1,6 +1,8 @@
 'use client';
 
-import { Heading } from 'herokwon-ds';
+import { Heading, TagGroup } from 'herokwon-ds';
+
+import type { ArticleMetadata } from '@types';
 
 import ArticleContainer from '../ArticleContainer';
 import CategoryButton from './CategoryButton';
@@ -8,8 +10,9 @@ import DateDisplay from './DateDisplay';
 import TagButton from './TagButton';
 
 type ArticleInfoProps = Required<
-  React.ComponentPropsWithoutRef<typeof ArticleContainer>
->;
+  Pick<React.ComponentPropsWithoutRef<typeof ArticleContainer>, 'variant'>
+> &
+  Omit<ArticleMetadata, 'thumbnail'>;
 type ArticleFormProps = Omit<ArticleInfoProps, 'variant'>;
 
 export default function ArticleInfo({
@@ -48,7 +51,7 @@ const ArticleDefaultForm = ({ ...metadata }: ArticleFormProps) => {
       </div>
       {metadata.heading && metadata.heading.length > 0 && (
         <Heading as="h2" className="line-clamp-2" data-testid="article-heading">
-          <span className="from-light-yellow to-light-yellow !duration-[400ms] group-bg-underline-[3px]">
+          <span className="from-light-yellow to-light-yellow group-bg-underline-[3px]">
             {metadata.heading}
           </span>
         </Heading>
@@ -60,11 +63,11 @@ const ArticleDefaultForm = ({ ...metadata }: ArticleFormProps) => {
         {metadata.description}
       </p>
       {metadata.tags.length > 0 && (
-        <div className="mb-0 mt-auto flex w-full flex-wrap justify-end gap-2 pt-2">
+        <TagGroup alignment="right" className="mb-0 mt-auto flex-wrap pt-2">
           {metadata.tags.map((tag, index) => (
             <TagButton key={`${tag}-${index}`} tag={tag} />
           ))}
-        </div>
+        </TagGroup>
       )}
     </>
   );
@@ -77,11 +80,11 @@ const ArticleSecondaryForm = ({ ...metadata }: ArticleFormProps) => {
         {metadata.category && <CategoryButton category={metadata.category} />}
         {metadata.heading && metadata.heading.length > 0 && (
           <Heading
-            as="h2"
+            as="h3"
             className="line-clamp-1 text-[1.24rem]"
             data-testid="article-heading"
           >
-            <span className="from-light-yellow to-light-yellow !duration-[400ms] group-bg-underline-[3px]">
+            <span className="from-light-yellow to-light-yellow group-bg-underline-[3px]">
               {metadata.heading}
             </span>
           </Heading>
@@ -104,11 +107,11 @@ const ArticleSecondaryForm = ({ ...metadata }: ArticleFormProps) => {
           />
         )}
         {metadata.tags.length > 0 && (
-          <div className="flex flex-wrap gap-x-2 gap-y-1">
+          <TagGroup className="!w-fit">
             {metadata.tags.map((tag, index) => (
               <TagButton key={`${tag}-${index}`} tag={tag} />
             ))}
-          </div>
+          </TagGroup>
         )}
       </div>
     </>

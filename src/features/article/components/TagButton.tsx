@@ -10,16 +10,16 @@ interface TagButtonProps {
 export default function TagButton({ tag }: TagButtonProps) {
   return (
     <Tag
-      stopPropagation
+      preventDefault
+      label={tag}
       iconBefore={{
-        content: LuHash,
+        icon: LuHash,
       }}
       href={{
         to: `/posts?tag=${encodeURIComponent(tag)}`,
       }}
+      title={`${tag} 태그 찾아보기`}
       data-testid="article-tag"
-    >
-      {tag}
-    </Tag>
+    />
   );
 }

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { type ArticleMetadata } from '@types';
+import type { ArticleMetadata } from '@types';
 
 import { getImgMetadata } from '@lib';
 
@@ -10,6 +10,7 @@ import ArticleInfo from './components/ArticleInfo';
 import ArticleThumbnail from './components/ArticleThumbnail';
 
 const metadata: ArticleMetadata = {
+  id: '0',
   heading: 'Heading',
   date: new Date(2024, 7, 8),
   description: 'This is a description',
@@ -22,7 +23,7 @@ describe('Article Container - Default', () => {
   it('should render the thumbnail image', async () => {
     const thumbnailMetadata = !metadata.thumbnail
       ? null
-      : await getImgMetadata(metadata.thumbnail);
+      : await getImgMetadata(metadata.thumbnail.url);
 
     if (thumbnailMetadata) {
       render(<ArticleThumbnail metadata={thumbnailMetadata} />);

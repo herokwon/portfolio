@@ -11,15 +11,16 @@ interface CategoryButtonProps {
 export default function CategoryButton({ category }: CategoryButtonProps) {
   return (
     <TextButton
-      stopPropagation
+      preventDefault
       label={ARTICLE_CATEGORIES[category]}
       variant="primary"
       spacing="compact"
       size="sm"
       href={{
-        to: `/posts/${category}`,
+        to: `/${category}`,
       }}
       className="font-semibold"
+      title={`${ARTICLE_CATEGORIES[category]} 카테고리 찾아보기`}
       data-testid="article-category"
     />
   );

@@ -1,5 +1,3 @@
-'use client';
-
 import { EmptyImage } from 'herokwon-ds';
 import Image from 'next/image';
 
@@ -9,11 +7,11 @@ interface ArticleThumbnailProps {
   metadata: ImgMetadata | null;
 }
 
-const ArticleThumbnail = ({ metadata }: ArticleThumbnailProps) => {
+export default function ArticleThumbnail({ metadata }: ArticleThumbnailProps) {
   return (
     <div className="relative mb-2 flex aspect-[4/3] w-full items-center justify-center">
       {!metadata ? (
-        <EmptyImage className="m-0 !aspect-square !h-fit !w-1/2 object-scale-down opacity-bold" />
+        <EmptyImage className="!aspect-square !h-fit !w-1/2 object-scale-down" />
       ) : (
         <Image
           fill
@@ -27,6 +25,4 @@ const ArticleThumbnail = ({ metadata }: ArticleThumbnailProps) => {
       )}
     </div>
   );
-};
-
-export default ArticleThumbnail;
+}
