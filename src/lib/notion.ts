@@ -12,25 +12,27 @@ import ky, { KyInstance } from 'ky';
 import { NextResponse } from 'next/server';
 
 import {
-  BlocksResponse,
+  BlockResponse,
+  CursorResponse,
   type GetBlockReturnType,
   type GetBlocksReturnType,
+  type GetCursorsReturnType,
   type GetPagesReturnType,
   type GetSummaryReturnType,
   type GetTagsReturnType,
   PageResponse,
   SummaryResponse,
-  TagsResponse,
+  TagResponse,
 } from '@types';
 
 import { convertRichToPlain, getPageMetadata } from '@utils';
 
-type PageQueryParameters = Omit<
-  QueryDatabaseParameters,
-  'database_id' | 'page_size'
-> &
-  Required<Pick<QueryDatabaseParameters, 'page_size'>>;
-type BlocksQueryParameters = Omit<ListBlockChildrenParameters, 'block_id'>;
+import { ARTICLES_PER_PAGE, ARTICLE_CATEGORIES } from '@data';
+
+type PageQueryParameters = Omit<QueryDatabaseParameters, 'database_id'>;
+type BlocksQueryParameters = Omit<ListBlockChildrenParameters, 'block_id'> & {
+  id: string;
+};
 type TagsQueryParameters = Omit<PageQueryParameters, 'page_size'>;
 
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
@@ -49,10 +51,9 @@ const notionApi: KyInstance = ky.create({
   prefixUrl: `${NOTION_BASE_URL}/v1`,
 });
 
-export const getPages = async ({
-  page_size,
-  ...queryParameters
-}: PageQueryParameters): Promise<NextResponse<GetPagesReturnType>> => {
+export const getPages = async (
+  queryParameters?: PageQueryParameters,
+): Promise<NextResponse<GetPagesReturnType>> => {
   try {
     const pageResponse = new PageResponse();
     const response = await notionApi
@@ -91,8 +92,11 @@ export const getPages = async ({
               direction: 'ascending',
             },
           ],
-          start_cursor: pageResponse.nextCursor ?? undefined,
-          page_size,
+          start_cursor:
+            pageResponse.nextCursor ??
+            queryParameters?.start_cursor ??
+            undefined,
+          page_size: queryParameters?.page_size ?? ARTICLES_PER_PAGE,
         } as PageQueryParameters,
       })
       .json<QueryDatabaseResponse>();
@@ -113,12 +117,12 @@ export const getPages = async ({
   }
 };
 
-export const getBlocks = async (
-  blockId: string,
-  queryParameters?: BlocksQueryParameters,
-): Promise<NextResponse<GetBlocksReturnType>> => {
+export const getBlocks = async ({
+  id,
+  ...queryParameters
+}: BlocksQueryParameters): Promise<NextResponse<GetBlocksReturnType>> => {
   try {
-    const blocksResponse = new BlocksResponse();
+    const blockResponse = new BlockResponse();
 
     do {
       const response = await notionApi
@@ -126,8 +130,8 @@ export const getBlocks = async (
           ...options,
           searchParams: [
             [
-              `${!queryParameters?.start_cursor && !blocksResponse.hasMore ? '' : 'start_cursor'}`,
-              queryParameters?.start_cursor ?? blocksResponse.nextCursor ?? '',
+              `${!queryParameters?.start_cursor && !blockResponse.hasMore ? '' : 'start_cursor'}`,
+              queryParameters?.start_cursor ?? blockResponse.nextCursor ?? '',
             ],
             [
               `${!queryParameters?.page_size ? '' : 'page_size'}`,
@@ -135,24 +139,21 @@ export const getBlocks = async (
             ],
           ],
         }))
-        .get(`blocks/${blockId}/children`)
+        .get(`blocks/${id}/children`)
         .json<ListBlockChildrenResponse>();
 
-      blocksResponse.setNextCursor(response.next_cursor);
-      blocksResponse.setData([
-        ...blocksResponse.data,
-        ...(response.results as BlockObjectResponse[]),
-      ]);
-    } while (!queryParameters?.page_size && blocksResponse.hasMore);
+      blockResponse.setNextCursor(response.next_cursor);
+      blockResponse.addData(response.results as BlockObjectResponse[]);
+    } while (!queryParameters?.page_size && blockResponse.hasMore);
 
     return NextResponse.json({
       result: !queryParameters?.page_size
         ? {
-            data: blocksResponse.data,
+            data: blockResponse.data,
           }
         : {
-            data: blocksResponse.data,
-            nextCursor: blocksResponse.nextCursor,
+            data: blockResponse.data,
+            nextCursor: blockResponse.nextCursor,
           },
     });
   } catch (error: unknown) {
@@ -165,12 +166,10 @@ export const getBlocks = async (
 export const getBlock = async <
   ResponseType extends BlockObjectResponse = BlockObjectResponse,
 >(
-  blockId: string,
+  id: string,
 ): Promise<NextResponse<GetBlockReturnType<ResponseType>>> => {
   try {
-    const response = await notionApi
-      .get(`blocks/${blockId}`)
-      .json<ResponseType>();
+    const response = await notionApi.get(`blocks/${id}`).json<ResponseType>();
 
     return NextResponse.json({
       result: {
@@ -188,29 +187,69 @@ export const getTags = async (
   queryParameters?: TagsQueryParameters,
 ): Promise<NextResponse<GetTagsReturnType>> => {
   try {
-    const tagsResponse = new TagsResponse();
+    const tagResponse = new TagResponse();
 
     do {
-      const response = await getPages({
-        ...queryParameters,
-        start_cursor: tagsResponse.nextCursor ?? undefined,
-        page_size: 3 * 6,
-      });
-      const responseData: GetPagesReturnType = await response.json();
-      if ('error' in responseData) return NextResponse.json(responseData);
+      const response: GetPagesReturnType = await (
+        await getPages({
+          ...queryParameters,
+          start_cursor: tagResponse.nextCursor ?? undefined,
+        })
+      ).json();
+      if ('error' in response) return NextResponse.json(response);
 
-      tagsResponse.setNextCursor(responseData.result.nextCursor);
-      tagsResponse.setData([
-        ...tagsResponse.data,
-        ...responseData.result.data.flatMap(page =>
+      tagResponse.setNextCursor(response.result.nextCursor);
+      tagResponse.addData(
+        response.result.data.flatMap(page =>
           getPageMetadata(page.properties).tags.flatMap(tag => tag),
         ),
-      ]);
-    } while (tagsResponse.hasMore);
+      );
+    } while (tagResponse.hasMore);
 
     return NextResponse.json({
       result: {
-        data: tagsResponse.data,
+        data: tagResponse.data,
+      },
+    });
+  } catch (error: unknown) {
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
+export const getCursors = async ({
+  category,
+}: {
+  category?: keyof typeof ARTICLE_CATEGORIES;
+} = {}): Promise<NextResponse<GetCursorsReturnType>> => {
+  try {
+    const cursorResponse = new CursorResponse();
+
+    do {
+      const response: GetPagesReturnType = await (
+        await getPages({
+          filter: !category
+            ? undefined
+            : {
+                property: 'category',
+                select: {
+                  equals: category,
+                },
+              },
+        })
+      ).json();
+      if ('error' in response) return NextResponse.json(response);
+
+      response.result.data.length > 0 &&
+        cursorResponse.addData({
+          nextCursor: response.result.nextCursor,
+        });
+    } while (cursorResponse.hasMore);
+
+    return NextResponse.json({
+      result: {
+        data: cursorResponse.data,
       },
     });
   } catch (error: unknown) {
@@ -227,21 +266,31 @@ export const getSummary = async (
     const summaryResponse = new SummaryResponse();
 
     do {
-      const response = await getBlocks(id, {
-        page_size: 5,
-        start_cursor: summaryResponse.nextCursor ?? undefined,
-      });
-      const responseData: GetBlocksReturnType = await response.json();
-      if ('error' in responseData) return NextResponse.json(responseData);
+      const response: GetBlocksReturnType = await (
+        await getBlocks({
+          id,
+          page_size: 3,
+          start_cursor: summaryResponse.nextCursor ?? undefined,
+        })
+      ).json();
+      if ('error' in response) return NextResponse.json(response);
 
-      summaryResponse.setNextCursor(responseData.result.nextCursor ?? null);
+      summaryResponse.setNextCursor(response.result.nextCursor ?? null);
 
-      for (const block of responseData.result.data) {
+      for (const block of response.result.data) {
         switch (block.type) {
           case 'equation':
-            block.has_children
-              ? await getSummary(block.id)
-              : summaryResponse.addData(block.equation.expression);
+            if (!block.has_children)
+              summaryResponse.addData(block.equation.expression);
+            else {
+              const response: GetSummaryReturnType = await (
+                await getSummary(block.id)
+              ).json();
+              console.log(response);
+              summaryResponse.addData(
+                'error' in response ? '' : response.result.data,
+              );
+            }
             break;
           case 'bulleted_list_item':
           case 'callout':
@@ -249,28 +298,35 @@ export const getSummary = async (
           case 'numbered_list_item':
           case 'paragraph':
           case 'quote':
-            block.has_children
-              ? await getSummary(block.id)
-              : summaryResponse.addData(
-                  convertRichToPlain(
-                    block.type === 'bulleted_list_item'
-                      ? block.bulleted_list_item.rich_text
-                      : block.type === 'callout'
-                        ? block.callout.rich_text
-                        : block.type === 'code'
-                          ? block.code.rich_text
-                          : block.type === 'numbered_list_item'
-                            ? block.numbered_list_item.rich_text
-                            : block.type === 'paragraph'
-                              ? block.paragraph.rich_text
-                              : block.quote.rich_text,
-                  ),
-                );
+            if (!block.has_children)
+              summaryResponse.addData(
+                convertRichToPlain(
+                  block.type === 'bulleted_list_item'
+                    ? block.bulleted_list_item.rich_text
+                    : block.type === 'callout'
+                      ? block.callout.rich_text
+                      : block.type === 'code'
+                        ? block.code.rich_text
+                        : block.type === 'numbered_list_item'
+                          ? block.numbered_list_item.rich_text
+                          : block.type === 'paragraph'
+                            ? block.paragraph.rich_text
+                            : block.quote.rich_text,
+                ),
+              );
+            else {
+              const response: GetSummaryReturnType = await (
+                await getSummary(block.id)
+              ).json();
+              console.log(response);
+              summaryResponse.addData(
+                'error' in response ? '' : response.result.data,
+              );
+            }
             break;
         }
       }
-    } while (summaryResponse.hasMore && summaryResponse.length < 200);
-
+    } while (summaryResponse.hasMore && summaryResponse.length < 100);
     return NextResponse.json({
       result: {
         data: summaryResponse.data,

@@ -11,7 +11,6 @@ describe('Side Bar', () => {
     render(<NavBar theme="light" />);
 
     const sidebarButton = screen.getByTestId('sidebar-button');
-    console.log(sidebarButton.parentElement);
     await userEvent.click(sidebarButton);
 
     expect(sidebarButton).toBeVisible();
