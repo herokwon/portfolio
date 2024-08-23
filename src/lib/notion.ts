@@ -9,7 +9,6 @@ import type {
   QueryDatabaseResponse,
 } from '@notionhq/client/build/src/api-endpoints';
 import ky, { KyInstance } from 'ky';
-import { NextResponse } from 'next/server';
 
 import {
   BlockResponse,
@@ -33,7 +32,6 @@ type PageQueryParameters = Omit<QueryDatabaseParameters, 'database_id'>;
 type BlocksQueryParameters = Omit<ListBlockChildrenParameters, 'block_id'> & {
   id: string;
 };
-type TagsQueryParameters = Omit<PageQueryParameters, 'page_size'>;
 
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 const NOTION_BASE_URL = 'https://api.notion.com';
@@ -51,9 +49,13 @@ const notionApi: KyInstance = ky.create({
   prefixUrl: `${NOTION_BASE_URL}/v1`,
 });
 
-export const getPages = async (
-  queryParameters?: PageQueryParameters,
-): Promise<NextResponse<GetPagesReturnType>> => {
+export const getPages = async ({
+  filter,
+  sorts,
+  start_cursor,
+  page_size,
+  ...queryParameters
+}: PageQueryParameters = {}): Promise<GetPagesReturnType> => {
   try {
     const pageResponse = new PageResponse();
     const response = await notionApi
@@ -68,7 +70,7 @@ export const getPages = async (
       .post('query', {
         json: {
           ...queryParameters,
-          filter: !queryParameters?.filter
+          filter: !filter
             ? {
                 property: 'status',
                 status: {
@@ -83,20 +85,17 @@ export const getPages = async (
                       equals: 'Published',
                     },
                   },
-                  queryParameters.filter,
+                  filter,
                 ],
               },
-          sorts: queryParameters?.sorts ?? [
+          sorts: sorts ?? [
             {
               property: 'date',
               direction: 'ascending',
             },
           ],
-          start_cursor:
-            pageResponse.nextCursor ??
-            queryParameters?.start_cursor ??
-            undefined,
-          page_size: queryParameters?.page_size ?? ARTICLES_PER_PAGE,
+          start_cursor: pageResponse.nextCursor ?? start_cursor ?? undefined,
+          page_size: page_size ?? ARTICLES_PER_PAGE,
         } as PageQueryParameters,
       })
       .json<QueryDatabaseResponse>();
@@ -104,23 +103,21 @@ export const getPages = async (
     pageResponse.setNextCursor(response.next_cursor);
     pageResponse.setData(response.results as PageObjectResponse[]);
 
-    return NextResponse.json({
+    return {
       result: {
         data: pageResponse.data,
         nextCursor: pageResponse.nextCursor,
       },
-    });
+    };
   } catch (error: unknown) {
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : String(error),
-    });
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 };
 
 export const getBlocks = async ({
   id,
   ...queryParameters
-}: BlocksQueryParameters): Promise<NextResponse<GetBlocksReturnType>> => {
+}: BlocksQueryParameters): Promise<GetBlocksReturnType> => {
   try {
     const blockResponse = new BlockResponse();
 
@@ -146,7 +143,7 @@ export const getBlocks = async ({
       blockResponse.addData(response.results as BlockObjectResponse[]);
     } while (!queryParameters?.page_size && blockResponse.hasMore);
 
-    return NextResponse.json({
+    return {
       result: !queryParameters?.page_size
         ? {
             data: blockResponse.data,
@@ -155,11 +152,9 @@ export const getBlocks = async ({
             data: blockResponse.data,
             nextCursor: blockResponse.nextCursor,
           },
-    });
+    };
   } catch (error: unknown) {
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : String(error),
-    });
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 };
 
@@ -167,54 +162,56 @@ export const getBlock = async <
   ResponseType extends BlockObjectResponse = BlockObjectResponse,
 >(
   id: string,
-): Promise<NextResponse<GetBlockReturnType<ResponseType>>> => {
+): Promise<GetBlockReturnType<ResponseType>> => {
   try {
     const response = await notionApi.get(`blocks/${id}`).json<ResponseType>();
 
-    return NextResponse.json({
+    return {
       result: {
         data: response,
       },
-    });
+    };
   } catch (error: unknown) {
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : String(error),
-    });
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 };
 
-export const getTags = async (
-  queryParameters?: TagsQueryParameters,
-): Promise<NextResponse<GetTagsReturnType>> => {
+export const getTags = async ({
+  category,
+}: {
+  category?: keyof typeof ARTICLE_CATEGORIES;
+} = {}): Promise<GetTagsReturnType> => {
   try {
     const tagResponse = new TagResponse();
 
     do {
-      const response: GetPagesReturnType = await (
-        await getPages({
-          ...queryParameters,
-          start_cursor: tagResponse.nextCursor ?? undefined,
-        })
-      ).json();
-      if ('error' in response) return NextResponse.json(response);
+      const pages = await getPages({
+        filter: !category
+          ? undefined
+          : {
+              property: 'category',
+              select: {
+                equals: category,
+              },
+            },
+        start_cursor: tagResponse.nextCursor ?? undefined,
+      });
 
-      tagResponse.setNextCursor(response.result.nextCursor);
+      tagResponse.setNextCursor(pages.result.nextCursor);
       tagResponse.addData(
-        response.result.data.flatMap(page =>
+        pages.result.data.flatMap(page =>
           getPageMetadata(page.properties).tags.flatMap(tag => tag),
         ),
       );
     } while (tagResponse.hasMore);
 
-    return NextResponse.json({
+    return {
       result: {
         data: tagResponse.data,
       },
-    });
+    };
   } catch (error: unknown) {
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : String(error),
-    });
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 };
 
@@ -222,74 +219,59 @@ export const getCursors = async ({
   category,
 }: {
   category?: keyof typeof ARTICLE_CATEGORIES;
-} = {}): Promise<NextResponse<GetCursorsReturnType>> => {
+} = {}): Promise<GetCursorsReturnType> => {
   try {
     const cursorResponse = new CursorResponse();
 
     do {
-      const response: GetPagesReturnType = await (
-        await getPages({
-          filter: !category
-            ? undefined
-            : {
-                property: 'category',
-                select: {
-                  equals: category,
-                },
+      const pages: GetPagesReturnType = await getPages({
+        filter: !category
+          ? undefined
+          : {
+              property: 'category',
+              select: {
+                equals: category,
               },
-        })
-      ).json();
-      if ('error' in response) return NextResponse.json(response);
+            },
+      });
 
-      response.result.data.length > 0 &&
+      pages.result.data.length > 0 &&
         cursorResponse.addData({
-          nextCursor: response.result.nextCursor,
+          nextCursor: pages.result.nextCursor,
         });
     } while (cursorResponse.hasMore);
 
-    return NextResponse.json({
+    return {
       result: {
         data: cursorResponse.data,
       },
-    });
+    };
   } catch (error: unknown) {
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : String(error),
-    });
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 };
 
-export const getSummary = async (
-  id: string,
-): Promise<NextResponse<GetSummaryReturnType>> => {
+export const getSummary = async (id: string): Promise<GetSummaryReturnType> => {
   try {
     const summaryResponse = new SummaryResponse();
 
     do {
-      const response: GetBlocksReturnType = await (
-        await getBlocks({
-          id,
-          page_size: 3,
-          start_cursor: summaryResponse.nextCursor ?? undefined,
-        })
-      ).json();
-      if ('error' in response) return NextResponse.json(response);
+      const blocks = await getBlocks({
+        id,
+        page_size: 3,
+        start_cursor: summaryResponse.nextCursor ?? undefined,
+      });
 
-      summaryResponse.setNextCursor(response.result.nextCursor ?? null);
+      summaryResponse.setNextCursor(blocks.result.nextCursor ?? null);
 
-      for (const block of response.result.data) {
+      for (const block of blocks.result.data) {
         switch (block.type) {
           case 'equation':
             if (!block.has_children)
               summaryResponse.addData(block.equation.expression);
             else {
-              const response: GetSummaryReturnType = await (
-                await getSummary(block.id)
-              ).json();
-              console.log(response);
-              summaryResponse.addData(
-                'error' in response ? '' : response.result.data,
-              );
+              const summary = await getSummary(block.id);
+              summaryResponse.addData(summary.result.data);
             }
             break;
           case 'bulleted_list_item':
@@ -315,26 +297,20 @@ export const getSummary = async (
                 ),
               );
             else {
-              const response: GetSummaryReturnType = await (
-                await getSummary(block.id)
-              ).json();
-              console.log(response);
-              summaryResponse.addData(
-                'error' in response ? '' : response.result.data,
-              );
+              const summary = await getSummary(block.id);
+              summaryResponse.addData(summary.result.data);
             }
             break;
         }
       }
     } while (summaryResponse.hasMore && summaryResponse.length < 100);
-    return NextResponse.json({
+
+    return {
       result: {
         data: summaryResponse.data,
       },
-    });
+    };
   } catch (error: unknown) {
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : String(error),
-    });
+    throw new Error(error instanceof Error ? error.message : String(error));
   }
 };

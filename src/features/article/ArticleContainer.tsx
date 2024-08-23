@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import type { ArticleMetadata, GetSummaryReturnType } from '@types';
+import type { ArticleMetadata } from '@types';
 
 import { getImgMetadata, getSummary } from '@lib';
 
@@ -20,17 +20,10 @@ export default async function ArticleContainer({
   id,
   ...metadata
 }: ArticleContainerProps) {
+  const summary = await getSummary(id);
   const thumbnailMetadata = !metadata.thumbnail
     ? null
     : await getImgMetadata(metadata.thumbnail.url);
-
-  const summaryResponse: GetSummaryReturnType = await (
-    await getSummary(id)
-  ).json();
-  const summary =
-    'error' in summaryResponse
-      ? '내용을 불러올 수 없습니다.'
-      : summaryResponse.result.data;
 
   return (
     <article className="block bg-light-primary group dark:bg-dark-primary">
@@ -40,7 +33,7 @@ export default async function ArticleContainer({
           !metadata.heading ||
           metadata.heading.length === 0
             ? '/posts'
-            : `/posts/${metadata.category}/${id}`
+            : `/${metadata.category}/${id}`
         }
         className="flex h-full w-full flex-col"
       >
@@ -50,7 +43,7 @@ export default async function ArticleContainer({
         <ArticleInfo
           variant={variant}
           id={id}
-          description={summary}
+          description={summary.result.data}
           {...metadata}
         />
       </Link>

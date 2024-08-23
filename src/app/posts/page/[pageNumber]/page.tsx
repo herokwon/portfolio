@@ -1,7 +1,5 @@
 import { notFound } from 'next/navigation';
 
-import type { GetCursorsReturnType, GetPagesReturnType } from '@types';
-
 import { getCursors, getPages } from '@lib';
 
 import { getPageMetadata } from '@utils';
@@ -13,25 +11,18 @@ export default async function Posts({
 }: {
   params: { pageNumber: string };
 }) {
-  if (parseInt(params.pageNumber) < 1) notFound();
+  const pageNumber = parseInt(params.pageNumber);
+  if (pageNumber < 1) notFound();
 
-  const cursorResponse: GetCursorsReturnType = await (
-    await getCursors()
-  ).json();
-  if ('error' in cursorResponse) throw new Error(cursorResponse.error);
+  const pages = await getPages({
+    start_cursor:
+      pageNumber === 1
+        ? undefined
+        : ((await getCursors()).result.data.at(pageNumber - 2)?.nextCursor ??
+          undefined),
+  });
 
-  const pageResponse: GetPagesReturnType = await (
-    await getPages({
-      start_cursor:
-        parseInt(params.pageNumber) === 1
-          ? undefined
-          : (cursorResponse.result.data.at(parseInt(params.pageNumber) - 2)
-              ?.nextCursor ?? undefined),
-    })
-  ).json();
-  if ('error' in pageResponse) throw new Error(pageResponse.error);
-
-  return pageResponse.result.data.map(({ id, properties }) => (
+  return pages.result.data.map(({ id, properties }) => (
     <ArticleContainer key={id} id={id} {...getPageMetadata(properties)} />
   ));
 }
