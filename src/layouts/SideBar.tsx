@@ -5,6 +5,8 @@ import { useEffect } from 'react';
 
 import { useSideBar } from '@stores';
 
+import { ArticleList } from '@features/article';
+
 import { NavItems, SideBarButton } from '@components';
 
 type SideBarProps = {
@@ -44,7 +46,13 @@ export default function SideBar({ articles }: SideBarProps) {
           <Heading as="h2" className="mb-2 text-[1rem]">
             최근 게시글
           </Heading>
-          {articles}
+          <ArticleList
+            hasPagination={false}
+            totalPageNumber={1}
+            className="first:*:gap-y-2"
+          >
+            {articles}
+          </ArticleList>
         </section>
       </aside>
     </Backdrop>

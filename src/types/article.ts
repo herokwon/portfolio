@@ -25,34 +25,28 @@ export interface NotionApiResponse {
   hasMore: boolean;
   nextCursor: string | null;
 }
-type NotionApiReturnType<Props = {}> =
-  | Props
-  | {
-      error: string;
-      status?: number;
-    };
-export type GetCursorsReturnType = NotionApiReturnType<{
+
+export type GetCursorsReturnType = {
   result: Pick<CursorResponse, 'data'>;
-}>;
-export type GetPagesReturnType = NotionApiReturnType<{
+};
+export type GetPagesReturnType = {
   result: Pick<PageResponse, 'data' | 'nextCursor'>;
-}>;
-export type GetBlocksReturnType = NotionApiReturnType<{
+};
+export type GetBlocksReturnType = {
   result: Pick<BlockResponse, 'data'> &
     Partial<Pick<BlockResponse, 'nextCursor'>>;
-}>;
-export type GetBlockReturnType<T extends BlockObjectResponse> =
-  NotionApiReturnType<{
-    result: {
-      data: T;
-    };
-  }>;
-export type GetTagsReturnType = NotionApiReturnType<{
+};
+export type GetBlockReturnType<T extends BlockObjectResponse> = {
+  result: {
+    data: T;
+  };
+};
+export type GetTagsReturnType = {
   result: Pick<TagResponse, 'data'>;
-}>;
-export type GetSummaryReturnType = NotionApiReturnType<{
+};
+export type GetSummaryReturnType = {
   result: Pick<SummaryResponse, 'data'>;
-}>;
+};
 
 export class CursorResponse {
   private _data: { nextCursor: string | null }[] = [{ nextCursor: null }];
